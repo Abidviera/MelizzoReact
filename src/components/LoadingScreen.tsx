@@ -7,6 +7,7 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onVideoEnd }: LoadingScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,20 @@ export default function LoadingScreen({ onVideoEnd }: LoadingScreenProps) {
     };
 
     video.addEventListener('ended', handleEnded);
-    video.play().catch(() => {});
+
+    // Try to start both video and audio immediately
+    const startMedia = () => {
+      if (!video.paused) return;
+      video.play().catch(() => {});
+      // Try audio right after
+      requestAnimationFrame(() => {
+        if (audioRef.current) {
+          audioRef.current.play().catch(() => {});
+        }
+      });
+    };
+
+    startMedia();
 
     return () => {
       video.removeEventListener('ended', handleEnded);
@@ -32,12 +46,13 @@ export default function LoadingScreen({ onVideoEnd }: LoadingScreenProps) {
         <video
           ref={videoRef}
           className="loading-screen__video"
-          src="/melizzoLoading/MELiZZO_brand_reveal_202603301031.mp4"
+          src="/melizzoLoading/loading.mp4"
           muted
           playsInline
           preload="auto"
         />
       </div>
+      <audio ref={audioRef} src="/melizzoLoading/loading.mp4" />
       <div className="loading-screen__bg-glow" />
     </div>
   );

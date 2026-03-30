@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import LoadingScreen from './components/LoadingScreen';
 import HeroSection from './components/HeroSection';
+import KunafaScroll from './components/KunafaScroll';
 
 function App() {
   const [showHero, setShowHero] = useState(false);
@@ -8,7 +9,12 @@ function App() {
   return (
     <>
       {!showHero && <LoadingScreen onVideoEnd={() => setShowHero(true)} />}
-      {showHero && <HeroSection />}
+      {showHero && (
+        <>
+          <HeroSection />
+          <KunafaScroll />
+        </>
+      )}
     </>
   );
 }

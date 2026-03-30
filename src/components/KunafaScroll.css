@@ -1,0 +1,472 @@
+/* ============================================================
+   KUNAFA SCROLL REVEAL — Sticky Scroll Animation
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Syne:wght@400;600;700;800&display=swap');
+
+/* ---- Section Shell ---- */
+.ks {
+  position: relative;
+  width: 100%;
+  /* Height = viewport + scroll room for animation (300vh gives 3x scroll distance) */
+  height: 400vh;
+  background: #0a0a0f;
+  box-sizing: border-box;
+}
+
+/* ---- Sticky Inner ---- */
+.ks__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ks__sticky--visible {
+  opacity: 1;
+}
+
+/* ============================================================
+   BACKGROUND
+   ============================================================ */
+.ks__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ks__bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: blobFloat 12s ease-in-out infinite;
+}
+
+.ks__bg-blob--1 {
+  width: 600px;
+  height: 600px;
+  top: -20%;
+  left: -15%;
+  background: radial-gradient(circle, rgba(58, 110, 95, 0.15) 0%, transparent 70%);
+  animation-delay: 0s;
+  animation-duration: 14s;
+}
+
+.ks__bg-blob--2 {
+  width: 500px;
+  height: 500px;
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(122, 175, 138, 0.1) 0%, transparent 70%);
+  animation-delay: -4s;
+  animation-duration: 18s;
+}
+
+.ks__bg-blob--3 {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(195, 78, 124, 0.08) 0%, transparent 70%);
+  animation-delay: -8s;
+  animation-duration: 10s;
+}
+
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.ks__bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(250, 254, 249, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 254, 249, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* ============================================================
+   CORNER ACCENTS
+   ============================================================ */
+.ks__corner {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ks__corner--tl { top: 24px; left: 24px; }
+.ks__corner--tr { top: 24px; right: 24px; }
+.ks__corner--bl { bottom: 24px; left: 24px; }
+.ks__corner--br { bottom: 24px; right: 24px; }
+
+.ks__corner-line {
+  position: absolute;
+  background: rgba(250, 254, 249, 0.15);
+}
+
+.ks__corner-line--h {
+  width: 40px;
+  height: 1.5px;
+}
+
+.ks__corner-line--v {
+  width: 1.5px;
+  height: 40px;
+}
+
+.ks__corner--tl .ks__corner-line--h { top: 0; left: 0; }
+.ks__corner--tl .ks__corner-line--v { top: 0; left: 0; }
+.ks__corner--tr .ks__corner-line--h { top: 0; right: 0; }
+.ks__corner--tr .ks__corner-line--v { top: 0; right: 0; }
+.ks__corner--bl .ks__corner-line--h { bottom: 0; left: 0; }
+.ks__corner--bl .ks__corner-line--v { bottom: 0; left: 0; }
+.ks__corner--br .ks__corner-line--h { bottom: 0; right: 0; }
+.ks__corner--br .ks__corner-line--v { bottom: 0; right: 0; }
+
+/* ============================================================
+   PRODUCT IMAGE — Full-screen background
+   ============================================================ */
+.ks__image-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: opacity;
+  transition: opacity 0.3s ease;
+}
+
+.ks__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  will-change: opacity, transform;
+  /* RAF drives opacity/transform — no CSS transitions needed */
+}
+
+/* ============================================================
+   DECORATIVE RINGS
+   ============================================================ */
+.ks__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  height: 350px;
+  border: 1px solid rgba(58, 110, 95, 0.15);
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+  /* RAF drives transform/opacity — no CSS transitions */
+}
+
+.ks__ring--inner {
+  width: 250px;
+  height: 250px;
+  border-color: rgba(195, 78, 124, 0.08);
+}
+
+/* ============================================================
+   CENTRAL CONTAINER
+   ============================================================ */
+.ks__container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+/* Eyebrow */
+.ks__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #619887;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s;
+}
+
+.ks__sticky--visible .ks__eyebrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ks__eyebrow-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #619887;
+  animation: dotBlink 2s ease-in-out infinite;
+}
+
+.ks__eyebrow-dot:last-child {
+  animation-delay: 1s;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.6); }
+}
+
+/* ============================================================
+   TEXT BLOCK — Scroll-revealed
+   ============================================================ */
+.ks__text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 48px;
+}
+
+.ks__line-wrapper {
+  position: relative;
+  display: block;
+}
+
+.ks__line-reveal {
+  display: block;
+  /* width controlled by RAF via transform: scaleX */
+  will-change: transform;
+}
+
+.ks__line {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(64px, 11vw, 160px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.5px;
+  color: #FAFEF9;
+  text-transform: uppercase;
+  margin: 0;
+  display: block;
+  white-space: nowrap;
+  text-shadow:
+    0 0 80px rgba(58, 110, 95, 0.25),
+    0 0 160px rgba(58, 110, 95, 0.1);
+}
+
+.ks__char {
+  display: inline-block;
+  /* opacity & transform set directly by RAF — no CSS transition needed */
+  will-change: opacity, transform;
+  contain: layout style;
+}
+
+/* ============================================================
+   TAGLINE
+   ============================================================ */
+.ks__tagline-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 48px;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ks__tagline-bar {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(to right, #619887, #7ab5a6);
+  flex-shrink: 0;
+}
+
+.ks__tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(12px, 1.5vw, 17px);
+  font-weight: 600;
+  color: rgba(250, 254, 249, 0.5);
+  margin: 0;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   SCROLL PROGRESS
+   ============================================================ */
+.ks__progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 60px;
+}
+
+.ks__progress-track {
+  width: 200px;
+  height: 2px;
+  background: rgba(250, 254, 249, 0.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.ks__progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #3A6E5F, #7ab5a6);
+  border-radius: 1px;
+  will-change: width;
+  box-shadow: 0 0 8px rgba(97, 152, 135, 0.5);
+}
+
+.ks__progress-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(250, 254, 249, 0.25);
+  min-width: 40px;
+}
+
+/* ============================================================
+   BOTTOM FADE
+   ============================================================ */
+.ks__fade-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, #0a0a0f);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* ============================================================
+   FEATURE CARDS
+   ============================================================ */
+.ks__features {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 24px;
+  z-index: 20;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ks__feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 28px;
+  background: rgba(250, 254, 249, 0.03);
+  border: 1px solid rgba(250, 254, 249, 0.07);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.ks__feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #3A6E5F, transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ks__feature-card:hover {
+  background: rgba(250, 254, 249, 0.06);
+  border-color: rgba(58, 110, 95, 0.3);
+}
+
+.ks__feature-card:hover::before {
+  opacity: 1;
+}
+
+.ks__feature-icon {
+  font-size: 18px;
+  color: #7ab5a6;
+  line-height: 1;
+}
+
+.ks__feature-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #FAFEF9;
+}
+
+.ks__feature-sub {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: rgba(250, 254, 249, 0.35);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .ks__features {
+    display: none;
+  }
+
+  .ks__progress-track {
+    width: 120px;
+  }
+
+  .ks__ring {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .ks__eyebrow {
+    margin-bottom: 24px;
+  }
+
+  .ks__text-block {
+    margin-bottom: 32px;
+  }
+
+  .ks__progress {
+    margin-bottom: 40px;
+  }
+}
