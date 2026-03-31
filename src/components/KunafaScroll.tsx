@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { useSmoothScroll } from '../hooks/useSmoothScroll.tsx';
 import './KunafaScroll.css';
 
 const TEXT_LINES = ['PISTACHIO', 'KUNAFA', 'DUBAI', 'CHOCOLATE'];
@@ -15,6 +16,7 @@ const FRAME_PATHS = Array.from({ length: NUM_FRAMES }, (_, idx) => {
 const LERP_FACTOR = 0.08; // how fast it catches up (lower = smoother/slower)
 
 export default function KunafaScroll() {
+  const lenis = useSmoothScroll();
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
 
@@ -176,9 +178,10 @@ export default function KunafaScroll() {
 
     rafRef.current = requestAnimationFrame(updateFrame);
     return () => cancelAnimationFrame(rafRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Scroll event handler — only updates refs, RAF loop reads them
+  // Lenis scroll handler — smooth scroll drives the animation
   useEffect(() => {
     const section = sectionRef.current;
 
@@ -199,10 +202,16 @@ export default function KunafaScroll() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    if (lenis) {
+      lenis.on('scroll', handleScroll);
+      handleScroll();
+      return () => lenis.off('scroll', handleScroll);
+    } else {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [lenis]);
 
   return (
     <section ref={sectionRef} className="ks" id="kunafa-scroll-reveal">

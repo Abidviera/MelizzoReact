@@ -5,7 +5,7 @@ const SLIDES = [
   {
     src: '/herosection/hero1video.MOV',
     eyebrow: 'Dubai Chocolate',
-    headline: ['KUNAFA', 'PISTACHIO'],
+    headline: ['PISTACHIO', 'KUNAFA'],
     sub: 'Crunchy. Syrupy. Unapologetically Bold.',
     cta: 'Shop Kunafa',
     ctaSub: 'See our collection',
@@ -13,7 +13,7 @@ const SLIDES = [
   {
     src: '/herosection/hero2video.MOV',
     eyebrow: 'Dubai Chocolate',
-    headline: ['ANGEL HAIR', 'DUBAI CHOC'],
+    headline: ['ANGEL HAIR', 'White'],
     sub: 'Silky. Luxurious. Tastes Like Heaven.',
     cta: 'Shop Angel Hair',
     ctaSub: 'Explore flavors',
@@ -46,6 +46,7 @@ export default function HeroSection() {
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const [, forceUpdate] = useState(0);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const goTo = useCallback((index: number) => {
     if (phase !== 'done') return;
@@ -81,7 +82,11 @@ export default function HeroSection() {
     return () => clearInterval(id);
   }, [scramble]);
 
+  // Play video immediately on mount (no delay)
   useEffect(() => {
+    videoRefs.current.forEach((v) => {
+      if (v) v.play().catch(() => {});
+    });
     const t = setTimeout(() => {
       setPhase('entering');
       setTimeout(() => {
@@ -140,6 +145,7 @@ export default function HeroSection() {
               muted
               loop
               playsInline
+              ref={(el) => { videoRefs.current[i] = el; }}
             />
             <div className="kh__video-overlay" />
           </div>

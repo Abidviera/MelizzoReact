@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { useSmoothScroll } from '../hooks/useSmoothScroll.tsx';
 import './AngelHairScroll.css';
 
 const TEXT_LINES = ['ANGEL', 'HAIR', 'WHITE', 'DUBAI', 'CHOCOLATE'];
@@ -15,6 +16,7 @@ const FRAME_PATHS = Array.from({ length: NUM_FRAMES }, (_, idx) => {
 const LERP_FACTOR = 0.08;
 
 export default function AngelHairScroll() {
+  const lenis = useSmoothScroll();
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -173,6 +175,7 @@ export default function AngelHairScroll() {
 
     rafRef.current = requestAnimationFrame(updateFrame);
     return () => cancelAnimationFrame(rafRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -195,10 +198,16 @@ export default function AngelHairScroll() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    if (lenis) {
+      lenis.on('scroll', handleScroll);
+      handleScroll();
+      return () => lenis.off('scroll', handleScroll);
+    } else {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [lenis]);
 
   return (
     <section ref={sectionRef} className="ahs" id="angel-hair-scroll">
