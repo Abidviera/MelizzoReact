@@ -1,0 +1,480 @@
+/* ============================================================
+   ANGEL HAIR SCROLL REVEAL — Sticky Scroll Animation
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Syne:wght@400;600;700;800&display=swap');
+
+/* ---- Section Shell ---- */
+.ahs {
+  position: relative;
+  width: 100%;
+  height: 420vh;
+  background: #0a0a0f;
+  box-sizing: border-box;
+}
+
+/* ---- Sticky Inner ---- */
+.ahs__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ahs__sticky--visible {
+  opacity: 1;
+}
+
+/* ============================================================
+   BACKGROUND
+   ============================================================ */
+.ahs__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ahs__bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: ahsBlobFloat 12s ease-in-out infinite;
+}
+
+.ahs__bg-blob--1 {
+  width: 600px;
+  height: 600px;
+  top: -20%;
+  left: -15%;
+  background: radial-gradient(circle, rgba(58, 110, 95, 0.15) 0%, transparent 70%);
+  animation-delay: 0s;
+  animation-duration: 14s;
+}
+
+.ahs__bg-blob--2 {
+  width: 500px;
+  height: 500px;
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, rgba(195, 78, 124, 0.1) 0%, transparent 70%);
+  animation-delay: -4s;
+  animation-duration: 18s;
+}
+
+.ahs__bg-blob--3 {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(200, 160, 100, 0.06) 0%, transparent 70%);
+  animation-delay: -8s;
+  animation-duration: 10s;
+}
+
+@keyframes ahsBlobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.ahs__bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(250, 254, 249, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 254, 249, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* ============================================================
+   CORNER ACCENTS
+   ============================================================ */
+.ahs__corner {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ahs__corner--tl { top: 24px; left: 24px; }
+.ahs__corner--tr { top: 24px; right: 24px; }
+.ahs__corner--bl { bottom: 24px; left: 24px; }
+.ahs__corner--br { bottom: 24px; right: 24px; }
+
+.ahs__corner-line {
+  position: absolute;
+  background: rgba(250, 254, 249, 0.15);
+}
+
+.ahs__corner-line--h {
+  width: 40px;
+  height: 1.5px;
+}
+
+.ahs__corner-line--v {
+  width: 1.5px;
+  height: 40px;
+}
+
+.ahs__corner--tl .ahs__corner-line--h { top: 0; left: 0; }
+.ahs__corner--tl .ahs__corner-line--v { top: 0; left: 0; }
+.ahs__corner--tr .ahs__corner-line--h { top: 0; right: 0; }
+.ahs__corner--tr .ahs__corner-line--v { top: 0; right: 0; }
+.ahs__corner--bl .ahs__corner-line--h { bottom: 0; left: 0; }
+.ahs__corner--bl .ahs__corner-line--v { bottom: 0; left: 0; }
+.ahs__corner--br .ahs__corner-line--h { bottom: 0; right: 0; }
+.ahs__corner--br .ahs__corner-line--v { bottom: 0; right: 0; }
+
+/* ============================================================
+   PRODUCT IMAGE
+   ============================================================ */
+.ahs__image-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: opacity;
+  transition: opacity 0.3s ease;
+}
+
+.ahs__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  will-change: opacity, transform;
+}
+
+/* ============================================================
+   DECORATIVE RINGS
+   ============================================================ */
+.ahs__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  height: 350px;
+  border: 1px solid rgba(58, 110, 95, 0.15);
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ahs__ring--inner {
+  width: 250px;
+  height: 250px;
+  border-color: rgba(200, 160, 100, 0.12);
+}
+
+/* ============================================================
+   CENTRAL CONTAINER
+   ============================================================ */
+.ahs__container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+/* Eyebrow */
+.ahs__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #619887;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s;
+}
+
+.ahs__sticky--visible .ahs__eyebrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ahs__eyebrow-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #619887;
+  animation: ahsDotBlink 2s ease-in-out infinite;
+}
+
+.ahs__eyebrow-dot:last-child {
+  animation-delay: 1s;
+}
+
+@keyframes ahsDotBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.6); }
+}
+
+/* ============================================================
+   TEXT BLOCK
+   ============================================================ */
+.ahs__text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 48px;
+}
+
+.ahs__line-wrapper {
+  position: relative;
+  display: block;
+}
+
+.ahs__line-reveal {
+  display: block;
+  will-change: transform;
+  /* Initial state — off-screen left, slides in via JS */
+  transform: translateX(-100%);
+}
+
+.ahs__line {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(52px, 9vw, 140px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.5px;
+  color: #FAFEF9;
+  text-transform: uppercase;
+  margin: 0;
+  display: block;
+  white-space: nowrap;
+  text-shadow:
+    0 0 80px rgba(58, 110, 95, 0.25),
+    0 0 160px rgba(58, 110, 95, 0.1);
+}
+
+.ahs__char {
+  display: inline-block;
+  will-change: opacity, transform, filter;
+  contain: layout style;
+  /* Initial state — blurred and scaled up, revealed via JS */
+  filter: blur(12px);
+  opacity: 0;
+  transform: scale3d(1.4, 1.4, 1);
+}
+
+/* ============================================================
+   TAGLINE
+   ============================================================ */
+.ahs__tagline-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 40px;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ahs__tagline-bar {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(to right, #C8A064, #e8c88a);
+  flex-shrink: 0;
+}
+
+.ahs__tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(11px, 1.4vw, 16px);
+  font-weight: 600;
+  color: rgba(250, 254, 249, 0.5);
+  margin: 0;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   FEATURE PILLS
+   ============================================================ */
+.ahs__feature-pills {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 20;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ahs__pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(250, 254, 249, 0.03);
+  border: 1px solid rgba(200, 160, 100, 0.15);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.ahs__pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #C8A064, transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ahs__pill:hover {
+  background: rgba(250, 254, 249, 0.06);
+  border-color: rgba(200, 160, 100, 0.35);
+}
+
+.ahs__pill:hover::before {
+  opacity: 1;
+}
+
+.ahs__pill-icon {
+  color: #C8A064;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ahs__pill span:last-child {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(250, 254, 249, 0.6);
+}
+
+/* ============================================================
+   SCROLL PROGRESS
+   ============================================================ */
+.ahs__progress {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 20;
+}
+
+.ahs__progress-track {
+  width: 200px;
+  height: 2px;
+  background: rgba(250, 254, 249, 0.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.ahs__progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #3A6E5F, #C8A064);
+  border-radius: 1px;
+  will-change: width;
+  box-shadow: 0 0 8px rgba(97, 152, 135, 0.5);
+}
+
+.ahs__progress-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(250, 254, 249, 0.25);
+  min-width: 40px;
+}
+
+/* ============================================================
+   BOTTOM FADE
+   ============================================================ */
+.ahs__fade-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, #0a0a0f);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .ahs__pill {
+    padding: 8px 14px;
+  }
+
+  .ahs__pill span:last-child {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .ahs__progress-track {
+    width: 120px;
+  }
+
+  .ahs__ring {
+    display: none;
+  }
+
+  .ahs__feature-pills {
+    bottom: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ahs__eyebrow {
+    margin-bottom: 24px;
+  }
+
+  .ahs__text-block {
+    margin-bottom: 28px;
+  }
+
+  .ahs__tagline-block {
+    margin-bottom: 28px;
+  }
+}
