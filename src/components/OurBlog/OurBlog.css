@@ -1,0 +1,322 @@
+/* ============================================================
+   OUR BLOG — Stories & Updates Section
+   Dark luxury aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Syne:wght@400;600;700;800&display=swap');
+
+.ob {
+  position: relative;
+  background: #0a0610;
+  padding: 120px 0;
+  overflow: hidden;
+}
+
+/* ---- Background ---- */
+.ob__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ob__bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(200, 160, 100, 0.04) 0%,
+    rgba(58, 110, 95, 0.03) 50%,
+    transparent 70%
+  );
+}
+
+.ob__bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(250, 254, 249, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 254, 249, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+}
+
+/* ---- Inner ---- */
+.ob__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 5vw, 72px);
+}
+
+/* ---- Header ---- */
+.ob__header {
+  text-align: center;
+  margin-bottom: 64px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.ob--visible .ob__header {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ob__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ob__label span {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: #C8A064;
+  white-space: nowrap;
+}
+
+.ob__label-line {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, #C8A064, transparent);
+}
+
+.ob__label-line:last-child {
+  background: linear-gradient(to left, #C8A064, transparent);
+}
+
+.ob__heading {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(48px, 7vw, 88px);
+  font-weight: 400;
+  color: #FAFEF9;
+  letter-spacing: -0.5px;
+  margin: 0 0 16px;
+  line-height: 1;
+}
+
+.ob__subheading {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(14px, 1.5vw, 17px);
+  font-weight: 400;
+  color: rgba(250, 254, 249, 0.45);
+  margin: 0;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ---- Blog Grid ---- */
+.ob__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+/* ---- Blog Card ---- */
+.ob__card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(250, 254, 249, 0.02);
+  border: 1px solid rgba(250, 254, 249, 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  transition-delay: var(--card-delay, 0s);
+}
+
+.ob--visible .ob__card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ob__card:hover {
+  border-color: rgba(200, 160, 100, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
+}
+
+.ob--visible .ob__card:hover {
+  transform: translateY(-4px);
+}
+
+/* ---- Card Image ---- */
+.ob__card-image-wrapper {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: #0f0f18;
+}
+
+.ob__card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ob__card:hover .ob__card-image {
+  transform: scale(1.05);
+}
+
+.ob__card-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(10, 6, 16, 0.5));
+  pointer-events: none;
+}
+
+.ob__card-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  background: rgba(10, 6, 16, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(200, 160, 100, 0.3);
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #C8A064;
+  border-radius: 2px;
+}
+
+/* ---- Card Content ---- */
+.ob__card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.ob__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ob__card-category {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #3A6E5F;
+}
+
+.ob__card-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(250, 254, 249, 0.2);
+}
+
+.ob__card-readtime {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: rgba(250, 254, 249, 0.3);
+}
+
+.ob__card-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 400;
+  color: #FAFEF9;
+  margin: 0;
+  line-height: 1.15;
+  letter-spacing: 0.3px;
+}
+
+.ob__card-excerpt {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(250, 254, 249, 0.45);
+  margin: 0;
+  line-height: 1.7;
+  letter-spacing: 0.3px;
+}
+
+.ob__card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(250, 254, 249, 0.05);
+}
+
+.ob__card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #C8A064;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ob__card-link:hover {
+  color: #e8c88a;
+  gap: 12px;
+}
+
+.ob__card-link svg {
+  transition: transform 0.3s;
+}
+
+.ob__card-link:hover svg {
+  transform: translateX(4px);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .ob__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .ob__card:last-child {
+    grid-column: 1 / -1;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .ob {
+    padding: 80px 0;
+  }
+
+  .ob__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .ob__card:last-child {
+    max-width: 100%;
+  }
+}

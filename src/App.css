@@ -1,1 +1,57 @@
 /* Component-specific styles are in their respective component CSS files */
+
+/* Global app overrides */
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
+
+/* Ensure pages have proper top padding when navbar is visible */
+main {
+  width: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0610;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3A6E5F;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #619887;
+}
+
+/* Text selection */
+::selection {
+  background: rgba(58, 110, 95, 0.3);
+  color: #FAFEF9;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid #3A6E5F;
+  outline-offset: 2px;
+}
+
+/* Smooth scroll for all browsers */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .footer,
+  .whatsapp-btn {
+    display: none !important;
+  }
+}

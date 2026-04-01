@@ -1,0 +1,396 @@
+/* ============================================================
+   NEWSLETTER — Email Subscription Section
+   Dark luxury aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Syne:wght@400;600;700;800&display=swap');
+
+.nl {
+  position: relative;
+  background: #0a0610;
+  padding: 120px 0;
+  overflow: hidden;
+}
+
+/* ---- Background ---- */
+.nl__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nl__bg-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(200, 160, 100, 0.06) 0%,
+    rgba(58, 110, 95, 0.04) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+}
+
+.nl__bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(250, 254, 249, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250, 254, 249, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+.nl__bg-blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(200, 160, 100, 0.2), transparent);
+}
+
+/* ---- Decorative Rings ---- */
+.nl__deco {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nl__deco-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  border: 1px solid rgba(58, 110, 95, 0.06);
+  border-radius: 50%;
+  animation: nlRingSpin 40s linear infinite;
+}
+
+.nl__deco-ring--2 {
+  width: 600px;
+  height: 600px;
+  border-color: rgba(200, 160, 100, 0.04);
+  animation-direction: reverse;
+  animation-duration: 55s;
+}
+
+@keyframes nlRingSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---- Inner ---- */
+.nl__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 5vw, 72px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 32px;
+}
+
+/* ---- Icon ---- */
+.nl__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(200, 160, 100, 0.06);
+  border: 1px solid rgba(200, 160, 100, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C8A064;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.nl--visible .nl__icon {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 0.1s;
+}
+
+/* ---- Header ---- */
+.nl__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.nl--visible .nl__header {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.2s;
+}
+
+.nl__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.nl__label span {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: #C8A064;
+  white-space: nowrap;
+}
+
+.nl__label-line {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, #C8A064, transparent);
+}
+
+.nl__label-line:last-child {
+  background: linear-gradient(to left, #C8A064, transparent);
+}
+
+.nl__heading {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 400;
+  color: #FAFEF9;
+  letter-spacing: -0.5px;
+  margin: 0;
+  line-height: 1;
+}
+
+.nl__subheading {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(14px, 1.5vw, 17px);
+  font-weight: 400;
+  color: rgba(250, 254, 249, 0.45);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+/* ---- Form ---- */
+.nl__form {
+  width: 100%;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition-delay: 0.35s;
+}
+
+.nl--visible .nl__form {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nl__input-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid rgba(200, 160, 100, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(250, 254, 249, 0.02);
+}
+
+.nl__input-group:focus-within {
+  border-color: rgba(200, 160, 100, 0.5);
+  box-shadow: 0 0 0 3px rgba(200, 160, 100, 0.08);
+}
+
+.nl__form--error .nl__input-group {
+  border-color: rgba(195, 78, 124, 0.5);
+}
+
+.nl__form--error .nl__input-group:focus-within {
+  box-shadow: 0 0 0 3px rgba(195, 78, 124, 0.1);
+}
+
+.nl__input {
+  flex: 1;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #FAFEF9;
+  letter-spacing: 0.3px;
+}
+
+.nl__input::placeholder {
+  color: rgba(250, 254, 249, 0.25);
+}
+
+.nl__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 28px;
+  background: #C8A064;
+  color: #0a0610;
+  border: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.nl__btn:hover {
+  background: #e8c88a;
+  transform: translateX(2px);
+}
+
+.nl__btn:active {
+  transform: translateX(0);
+}
+
+.nl__btn svg {
+  transition: transform 0.3s;
+}
+
+.nl__btn:hover svg {
+  transform: translateX(3px);
+}
+
+.nl__error-msg {
+  margin: 8px 0 0;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  color: #C34E7C;
+  letter-spacing: 0.3px;
+  text-align: left;
+}
+
+/* ---- Success ---- */
+.nl__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 32px;
+  background: rgba(58, 110, 95, 0.08);
+  border: 1px solid rgba(58, 110, 95, 0.2);
+  border-radius: 4px;
+  animation: nlSuccessIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nlSuccessIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nl__success-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(58, 110, 95, 0.2);
+  border: 1px solid rgba(58, 110, 95, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7ab5a6;
+}
+
+.nl__success-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(250, 254, 249, 0.7);
+  margin: 0;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+/* ---- Promise ---- */
+.nl__promise {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(250, 254, 249, 0.25);
+  margin: 0;
+  letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  transition-delay: 0.5s;
+}
+
+.nl--visible .nl__promise {
+  opacity: 1;
+}
+
+.nl__promise svg {
+  color: #3A6E5F;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .nl {
+    padding: 80px 0;
+  }
+
+  .nl__input-group {
+    flex-direction: column;
+    border-radius: 4px;
+  }
+
+  .nl__input {
+    padding: 14px 16px;
+  }
+
+  .nl__btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 0;
+  }
+
+  .nl__deco {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .nl__inner {
+    gap: 24px;
+  }
+}

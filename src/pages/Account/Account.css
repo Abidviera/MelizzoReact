@@ -1,0 +1,473 @@
+.account {
+  min-height: 100svh;
+  background: #0a0610;
+  padding: 120px clamp(24px, 5vw, 72px) 80px;
+  font-family: 'Syne', sans-serif;
+}
+
+.account__auth-container {
+  max-width: 440px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+
+.account__auth-card {
+  background: rgba(250, 254, 249, 0.02);
+  border: 1px solid rgba(250, 254, 249, 0.06);
+  border-radius: 12px;
+  padding: 40px;
+}
+
+.account__auth-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  color: #FAFEF9;
+  margin: 0 0 8px;
+}
+
+.account__auth-sub {
+  font-size: 13px;
+  color: rgba(250, 254, 249, 0.4);
+  margin: 0 0 32px;
+}
+
+.account__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.account__form--two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.account__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(250, 254, 249, 0.5);
+}
+
+.account__input {
+  background: rgba(250, 254, 249, 0.03);
+  border: 1px solid rgba(250, 254, 249, 0.1);
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  color: #FAFEF9;
+  outline: none;
+  transition: border-color 0.3s;
+  width: 100%;
+}
+
+.account__input:focus {
+  border-color: #3A6E5F;
+}
+
+.account__input::placeholder {
+  color: rgba(250, 254, 249, 0.2);
+}
+
+.account__btn {
+  padding: 14px 28px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.account__btn--primary {
+  background: #3A6E5F;
+  color: #FAFEF9;
+}
+
+.account__btn--primary:hover {
+  background: #619887;
+}
+
+.account__btn--secondary {
+  background: rgba(250, 254, 249, 0.04);
+  border: 1px solid rgba(250, 254, 249, 0.1);
+  color: rgba(250, 254, 249, 0.6);
+}
+
+.account__btn--secondary:hover {
+  border-color: rgba(250, 254, 249, 0.2);
+  color: #FAFEF9;
+}
+
+.account__auth-switch {
+  font-size: 13px;
+  color: rgba(250, 254, 249, 0.4);
+  text-align: center;
+  margin: 0;
+}
+
+.account__auth-switch-btn {
+  background: none;
+  border: none;
+  color: #3A6E5F;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+/* Authenticated layout */
+.account__container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.account__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.account__user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: rgba(250, 254, 249, 0.02);
+  border: 1px solid rgba(250, 254, 249, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.account__user-avatar {
+  width: 44px;
+  height: 44px;
+  background: #3A6E5F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: #FAFEF9;
+  flex-shrink: 0;
+}
+
+.account__user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FAFEF9;
+  margin: 0;
+}
+
+.account__user-email {
+  font-size: 11px;
+  color: rgba(250, 254, 249, 0.4);
+  margin: 0;
+}
+
+.account__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account__nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(250, 254, 249, 0.5);
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+  width: 100%;
+}
+
+.account__nav-link:hover {
+  background: rgba(250, 254, 249, 0.03);
+  color: #FAFEF9;
+}
+
+.account__nav-link--active {
+  background: rgba(58, 110, 95, 0.1);
+  color: #FAFEF9;
+}
+
+.account__logout-btn {
+  margin-top: auto;
+  padding: 12px 16px;
+  background: rgba(195, 78, 124, 0.05);
+  border: 1px solid rgba(195, 78, 124, 0.1);
+  border-radius: 6px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(195, 78, 124, 0.7);
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.account__logout-btn:hover {
+  background: rgba(195, 78, 124, 0.1);
+  border-color: rgba(195, 78, 124, 0.2);
+  color: #C34E7C;
+}
+
+/* Content */
+.account__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.account__section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.account__section-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  color: #FAFEF9;
+  margin: 0;
+}
+
+.account__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(250, 254, 249, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Orders */
+.account__orders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.account__order-card {
+  background: rgba(250, 254, 249, 0.02);
+  border: 1px solid rgba(250, 254, 249, 0.05);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.account__order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.account__order-header > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account__order-number {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  color: #FAFEF9;
+}
+
+.account__order-status {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.account__order-status--pending {
+  background: rgba(200, 160, 100, 0.1);
+  color: #C8A064;
+}
+
+.account__order-status--processing {
+  background: rgba(58, 110, 95, 0.1);
+  color: #3A6E5F;
+}
+
+.account__order-status--shipped {
+  background: rgba(195, 78, 124, 0.1);
+  color: #C34E7C;
+}
+
+.account__order-status--delivered {
+  background: rgba(58, 110, 95, 0.15);
+  color: #619887;
+}
+
+.account__order-status--cancelled {
+  background: rgba(250, 254, 249, 0.05);
+  color: rgba(250, 254, 249, 0.3);
+}
+
+.account__order-date {
+  font-size: 12px;
+  color: rgba(250, 254, 249, 0.4);
+}
+
+.account__order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(250, 254, 249, 0.04);
+}
+
+.account__order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account__order-item-img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: rgba(250, 254, 249, 0.03);
+}
+
+.account__order-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(250, 254, 249, 0.7);
+}
+
+.account__order-item-qty {
+  font-size: 12px;
+  color: rgba(250, 254, 249, 0.3);
+}
+
+.account__order-item-price {
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  color: #FAFEF9;
+}
+
+.account__order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+}
+
+.account__order-total {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  color: #FAFEF9;
+}
+
+.account__order-delivery {
+  font-size: 12px;
+  color: rgba(250, 254, 249, 0.4);
+}
+
+/* Settings */
+.account__settings-group {
+  background: rgba(250, 254, 249, 0.02);
+  border: 1px solid rgba(250, 254, 249, 0.05);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account__settings-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #FAFEF9;
+  margin: 0;
+}
+
+.account__settings-text {
+  font-size: 13px;
+  color: rgba(250, 254, 249, 0.4);
+  margin: 0;
+}
+
+.account__toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: rgba(250, 254, 249, 0.6);
+  cursor: pointer;
+}
+
+.account__toggle input[type="checkbox"] {
+  accent-color: #3A6E5F;
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .account__container {
+    grid-template-columns: 1fr;
+  }
+
+  .account__sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .account__user {
+    width: 100%;
+  }
+
+  .account__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .account__logout-btn {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .account__form--two-col {
+    grid-template-columns: 1fr;
+  }
+}

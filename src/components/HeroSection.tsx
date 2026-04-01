@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import './HeroSection.css';
 
 const SLIDES = [
@@ -21,9 +21,10 @@ const SLIDES = [
 ];
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+const SCRAMBLE_FRAMES = 20;
+const SCRAMBLE_INTERVAL = 40;
 
-function scrambleWord(word: string, progress: number, isVisible: boolean): string {
-  if (isVisible) return word;
+function scrambleWord(word: string, progress: number): string {
   return word
     .split('')
     .map((char, i) => {
@@ -36,97 +37,116 @@ function scrambleWord(word: string, progress: number, isVisible: boolean): strin
 
 export default function HeroSection() {
   const [active, setActive] = useState(0);
-  const [phase, setPhase] = useState<'idle' | 'exiting' | 'entering' | 'done'>('idle');
-  const [contentIdx, setContentIdx] = useState(0);
-  const [scramble, setScramble] = useState(false);
-  const [scrambleFrame, setScrambleFrame] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const [charProgress, setCharProgress] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const sectionRef = useRef<HTMLElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const [, forceUpdate] = useState(0);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [scrambleKey, setScrambleKey] = useState(0);
+  const [mx, setMx] = useState(0);
+  const [my, setMy] = useState(0);
 
-  const goTo = useCallback((index: number) => {
-    if (phase !== 'done') return;
-    setPhase('exiting');
-    setScramble(false);
-    setCharProgress(0);
-    setTimeout(() => {
-      setActive(index);
-      setContentIdx(index);
-      setPhase('entering');
-      setTimeout(() => {
-        setPhase('done');
-        setScramble(true);
-      }, 100);
-    }, 600);
-  }, [phase]);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const mouseRafRef = useRef<number | undefined>(undefined);
+  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Play hero video immediately on mount — it's already preloaded
+  useEffect(() => {
+    const v = videoRefs.current[0];
+    if (v) {
+      v.play().catch(() => {
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    }
+  }, []);
+
+  // Start entrance animation right away
+  useEffect(() => {
+    const t1 = setTimeout(() => setIsReady(true), 100);
+    const t2 = setTimeout(() => setScrambleKey((k) => k + 1), 400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   // Scramble effect
   useEffect(() => {
-    if (!scramble) return;
+    if (!isReady) return;
     let frame = 0;
-    const totalFrames = 20;
     const id = setInterval(() => {
       frame++;
-      setCharProgress(frame / totalFrames);
-      setScrambleFrame(frame);
-      if (frame >= totalFrames) {
+      setCharProgress(frame / SCRAMBLE_FRAMES);
+      if (frame >= SCRAMBLE_FRAMES) {
         clearInterval(id);
         setCharProgress(1);
-        setScramble(false);
       }
-    }, 40);
+    }, SCRAMBLE_INTERVAL);
     return () => clearInterval(id);
-  }, [scramble]);
+  }, [isReady, scrambleKey]);
 
-  // Play video immediately on mount (no delay)
-  useEffect(() => {
-    videoRefs.current.forEach((v) => {
-      if (v) v.play().catch(() => {});
-    });
-    const t = setTimeout(() => {
-      setPhase('entering');
-      setTimeout(() => {
-        setPhase('done');
-        setScramble(true);
-      }, 400);
-    }, 300);
-    return () => clearTimeout(t);
-  }, []);
-
+  // Auto-advance slides
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      goTo((active + 1) % SLIDES.length);
+      setActive((prev) => (prev + 1) % SLIDES.length);
     }, 8000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [active, goTo]);
-
-  // Mouse parallax
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      mouseRef.current = {
-        x: ((e.clientX - rect.left) / rect.width - 0.5) * 2,
-        y: ((e.clientY - rect.top) / rect.height - 0.5) * 2,
-      };
-      forceUpdate(n => n + 1);
-    };
-    el.addEventListener('mousemove', onMove);
-    return () => el.removeEventListener('mousemove', onMove);
   }, []);
 
-  const mx = mouseRef.current.x;
-  const my = mouseRef.current.y;
-  const s = SLIDES[contentIdx];
-  const isDone = phase === 'done';
+  // Play active video when slide changes
+  useEffect(() => {
+    const v = videoRefs.current[active];
+    if (v) {
+      v.play().catch(() => {
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    }
+  }, [active]);
+
+  // Throttled mouse parallax via rAF
+  useEffect(() => {
+    const el = headlineRef.current?.closest('.kh');
+    if (!el) return;
+
+    const onMove = (e: MouseEvent) => {
+      pendingMouseRef.current = {
+        x: ((e.clientX - window.innerWidth / 2) / window.innerWidth) * 2,
+        y: ((e.clientY - window.innerHeight / 2) / window.innerHeight) * 2,
+      };
+
+      if (mouseRafRef.current === undefined) {
+        mouseRafRef.current = requestAnimationFrame(() => {
+          if (pendingMouseRef.current) {
+            setMx(pendingMouseRef.current.x);
+            setMy(pendingMouseRef.current.y);
+          }
+          mouseRafRef.current = undefined;
+        });
+      }
+    };
+
+    el.addEventListener('mousemove', onMove, { passive: true });
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      if (mouseRafRef.current !== undefined) cancelAnimationFrame(mouseRafRef.current);
+    };
+  }, []);
+
+  const headlineChars = useMemo(() => {
+    return SLIDES[active].headline.map((line, lineIdx) =>
+      line.split('').map((char, charIdx) => {
+        const isRevealed = charIdx / line.length < charProgress;
+        const displayChar = isReady ? scrambleWord(char, charProgress) : char;
+        return { char: displayChar, isRevealed, charIdx, lineIdx };
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, charProgress, isReady]);
+
+  const s = SLIDES[active];
+  const showScramble = isReady && charProgress < 1;
+  const isPink = active === 1;
 
   return (
-    <section className={`kh${active === 1 ? ' kh--slide-2' : ''}`} ref={sectionRef}>
+    <section className={`kh${isPink ? ' kh--slide-2' : ''}`}>
       {/* ===== VIDEO LAYER ===== */}
       <div className="kh__media">
         {SLIDES.map((slide, i) => (
@@ -135,16 +155,15 @@ export default function HeroSection() {
             className={[
               'kh__slide',
               i === active ? 'kh__slide--active' : '',
-              phase === 'exiting' && i === active ? 'kh__slide--exit' : '',
             ].filter(Boolean).join(' ')}
           >
             <video
               src={slide.src}
               className="kh__video"
-              autoPlay
               muted
               loop
               playsInline
+              preload="auto"
               ref={(el) => { videoRefs.current[i] = el; }}
             />
             <div className="kh__video-overlay" />
@@ -155,20 +174,18 @@ export default function HeroSection() {
       {/* ===== COLOR BLOCK ACCENTS ===== */}
       <div className="kh__color-blocks" aria-hidden="true">
         <div
-          className={`kh__block kh__block--${active === 1 ? 'pink-1' : '1'}`}
+          className={`kh__block kh__block--${isPink ? 'pink-1' : '1'}`}
           style={{ transform: `translate(${mx * 25}px, ${my * 15}px)` }}
         />
         <div
-          className={`kh__block kh__block--${active === 1 ? 'pink-2' : '2'}`}
-          style={{ transform: `translate(${mx * -20}px, ${my * -20}px)` }}
+          className={`kh__block kh__block--${isPink ? 'pink-2' : '2'}`}
+          style={{ transform: `translate(${-mx * 20}px, ${-my * 20}px)` }}
         />
-        <div
-          className={`kh__block kh__block--${active === 1 ? 'pink-3' : '3'}`}
-        />
+        <div className={`kh__block kh__block--${isPink ? 'pink-3' : '3'}`} />
       </div>
 
       {/* ===== HEADER BAR ===== */}
-      <div className={`kh__header ${isDone ? 'kh__header--in' : ''}`}>
+      <div className={`kh__header ${isReady ? 'kh__header--in' : ''}`}>
         <div className="kh__logo">
           <span className="kh__logo-script">melizzo</span>
         </div>
@@ -188,12 +205,9 @@ export default function HeroSection() {
       </div>
 
       {/* ===== MAIN CONTENT ===== */}
-      <div
-        className="kh__main"
-        style={{ '--mx': mx, '--my': my } as React.CSSProperties}
-      >
+      <div className="kh__main" style={{ '--mx': mx, '--my': my } as React.CSSProperties}>
         {/* Eyebrow */}
-        <div className={`kh__eyebrow ${isDone ? 'kh__eyebrow--in' : ''}`}>
+        <div className={`kh__eyebrow ${isReady ? 'kh__eyebrow--in' : ''}`}>
           <span className="kh__eyebrow-dot" />
           <span>{s.eyebrow}</span>
           <span className="kh__eyebrow-dot" />
@@ -202,26 +216,24 @@ export default function HeroSection() {
         {/* KINETIC HEADLINE */}
         <h1
           ref={headlineRef}
-          className={`kh__headline ${isDone ? 'kh__headline--in' : ''}`}
+          className={`kh__headline ${isReady ? 'kh__headline--in' : ''}`}
         >
-          {s.headline.map((line, lineIdx) => (
+          {headlineChars.map((lineChars, lineIdx) => (
             <span
               key={lineIdx}
               className="kh__headline-line"
               style={{ '--line-delay': `${lineIdx * 0.15}s` } as React.CSSProperties}
             >
-              {line.split('').map((char, charIdx) => (
+              {lineChars.map(({ char, isRevealed, charIdx }) => (
                 <span
                   key={charIdx}
-                  className="kh__headline-char"
+                  className="kh__headline-char kh__headline-char--in"
                   style={{
                     '--char-delay': `${lineIdx * 0.15 + charIdx * 0.04}s`,
-                    '--char-scramble': isDone ? scramble ? `${charProgress > charIdx / line.length ? 1 : 0}` : '1' : '0',
+                    '--revealed': showScramble ? (isRevealed ? 1 : 0) : 1,
                   } as React.CSSProperties}
                 >
-                  {char === ' ' ? '\u00A0' : scramble && isDone
-                    ? scrambleWord(char, charProgress, charIdx / line.length < charProgress)
-                    : char}
+                  {char === ' ' ? '\u00A0' : char}
                 </span>
               ))}
             </span>
@@ -229,15 +241,13 @@ export default function HeroSection() {
         </h1>
 
         {/* TAGLINE BLOCK */}
-        <div
-          className={`kh__tagline-block ${isDone ? 'kh__tagline-block--in' : ''}`}
-        >
+        <div className={`kh__tagline-block ${isReady ? 'kh__tagline-block--in' : ''}`}>
           <div className="kh__tagline-bar" />
           <p className="kh__tagline">{s.sub}</p>
         </div>
 
         {/* CTA ROW */}
-        <div className={`kh__cta-row ${isDone ? 'kh__cta-row--in' : ''}`}>
+        <div className={`kh__cta-row ${isReady ? 'kh__cta-row--in' : ''}`}>
           <a href="#" className="kh__btn kh__btn--primary">
             <span className="kh__btn-text">{s.cta}</span>
             <span className="kh__btn-fill" aria-hidden="true" />
@@ -248,7 +258,7 @@ export default function HeroSection() {
         </div>
 
         {/* STAT / SOCIAL STRIP */}
-        <div className={`kh__strip ${isDone ? 'kh__strip--in' : ''}`}>
+        <div className={`kh__strip ${isReady ? 'kh__strip--in' : ''}`}>
           <div className="kh__strip-stat">
             <span className="kh__strip-num">{s === SLIDES[0] ? '100%' : '100%'}</span>
             <span className="kh__strip-label">{s === SLIDES[0] ? 'Authentic Kunafa' : 'Fresh Daily'}</span>
@@ -272,7 +282,7 @@ export default function HeroSection() {
       </div>
 
       {/* ===== MARQUEE TICKER ===== */}
-      <div className={`kh__ticker ${isDone ? 'kh__ticker--in' : ''}`} aria-hidden="true">
+      <div className={`kh__ticker ${isReady ? 'kh__ticker--in' : ''}`} aria-hidden="true">
         <div className="kh__ticker-track">
           {Array.from({ length: 6 }).map((_, i) => (
             <span key={i} className="kh__ticker-item">
@@ -312,7 +322,7 @@ export default function HeroSection() {
       </div>
 
       {/* ===== SLIDE NAV ===== */}
-      <div className={`kh__slide-nav ${isDone ? 'kh__slide-nav--in' : ''}`}>
+      <div className={`kh__slide-nav ${isReady ? 'kh__slide-nav--in' : ''}`}>
         <div className="kh__slide-progress">
           <div className="kh__slide-progress-track">
             <div key={`prog-${active}`} className="kh__slide-progress-fill" />
@@ -325,7 +335,7 @@ export default function HeroSection() {
               className={`kh__slide-dot ${i === active ? 'kh__slide-dot--active' : ''}`}
               onClick={() => {
                 if (intervalRef.current) clearInterval(intervalRef.current);
-                goTo(i);
+                setActive(i);
               }}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -334,7 +344,7 @@ export default function HeroSection() {
       </div>
 
       {/* ===== SCROLL HINT ===== */}
-      <div className={`kh__scroll ${isDone ? 'kh__scroll--in' : ''}`}>
+      <div className={`kh__scroll ${isReady ? 'kh__scroll--in' : ''}`}>
         <div className="kh__scroll-icon">
           <div className="kh__scroll-icon-inner" />
         </div>
