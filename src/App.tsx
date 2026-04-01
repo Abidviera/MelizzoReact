@@ -46,6 +46,10 @@ function Layout({ children }: { children: React.ReactNode }) {
   const isFullscreen = pathname === '/' ||
     ['/shop', '/about', '/contact', '/account', '/wishlist', '/cart', '/coming-soon'].includes(pathname);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+
   return (
     <>
       <Navbar />

@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { WhatsAppService } from '../../services/whatsAppService';
 import './About.css';
 
@@ -61,31 +60,6 @@ const instagramColors = [
 ];
 
 export default function About() {
-  const revealRefs = useRef<(HTMLElement | null)[]>([]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('about--visible');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
-
-    revealRefs.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const addRef = (index: number) => (el: HTMLElement | null) => {
-    revealRefs.current[index] = el;
-  };
-
   return (
     <div className="about">
       {/* Hero */}
@@ -110,7 +84,7 @@ export default function About() {
       {/* Story */}
       <section className="about__story">
         <div className="about__container">
-          <div className="about__story-grid" ref={addRef(0)}>
+          <div className="about__story-grid">
             <div className="about__story-label">
               <span className="about__section-tag">Est. 2025</span>
             </div>
@@ -133,7 +107,7 @@ export default function About() {
       {/* Stats */}
       <section className="about__stats" id="stats">
         <div className="about__container">
-          <div className="about__stats-grid" ref={addRef(1)}>
+          <div className="about__stats-grid">
             {stats.map((stat, i) => (
               <div className="about__stat-card" key={i}>
                 <span className="about__stat-value">{stat.value}</span>
@@ -147,7 +121,7 @@ export default function About() {
       {/* Values */}
       <section className="about__values" id="values">
         <div className="about__container">
-          <div className="about__values-header" ref={addRef(2)}>
+          <div className="about__values-header">
             <span className="about__section-tag">What Drives Us</span>
             <h2 className="about__section-title">Our Core Values</h2>
             <p className="about__values-intro">
@@ -156,7 +130,7 @@ export default function About() {
           </div>
           <div className="about__values-grid">
             {values.map((v, i) => (
-              <div className="about__value-card" key={i} ref={addRef(3 + i)}>
+              <div className="about__value-card" key={i}>
                 <div className="about__value-icon">{v.icon}</div>
                 <h3 className="about__value-title">{v.title}</h3>
                 <p className="about__value-desc">{v.desc}</p>
@@ -169,7 +143,7 @@ export default function About() {
       {/* Certifications */}
       <section className="about__certs" id="certifications">
         <div className="about__container">
-          <div className="about__certs-inner" ref={addRef(6)}>
+          <div className="about__certs-inner">
             <div className="about__certs-header">
               <span className="about__section-tag">Trust & Quality</span>
               <h2 className="about__section-title">Certifications</h2>
@@ -220,13 +194,13 @@ export default function About() {
       {/* Timeline */}
       <section className="about__timeline" id="timeline">
         <div className="about__container">
-          <div className="about__timeline-header" ref={addRef(7)}>
+          <div className="about__timeline-header">
             <span className="about__section-tag">Our Journey</span>
             <h2 className="about__section-title">Company Timeline</h2>
           </div>
           <div className="about__timeline-list">
             {timeline.map((item, i) => (
-              <div className="about__timeline-item" key={i} ref={addRef(8 + i)}>
+              <div className="about__timeline-item" key={i}>
                 <div className="about__timeline-marker">
                   <div className="about__timeline-dot" />
                   {i < timeline.length - 1 && <div className="about__timeline-line" />}
@@ -245,7 +219,7 @@ export default function About() {
       {/* Instagram Grid */}
       <section className="about__insta">
         <div className="about__container">
-          <div className="about__insta-header" ref={addRef(12)}>
+          <div className="about__insta-header">
             <span className="about__section-tag">Follow Us</span>
             <h2 className="about__section-title">@melizzo on Instagram</h2>
             <a
@@ -267,7 +241,6 @@ export default function About() {
               <div
                 className="about__insta-cell"
                 key={i}
-                ref={addRef(13 + i)}
                 style={{
                   background: `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`,
                 }}
@@ -288,7 +261,7 @@ export default function About() {
       {/* CTA */}
       <section className="about__cta">
         <div className="about__container">
-          <div className="about__cta-inner" ref={addRef(19)}>
+          <div className="about__cta-inner">
             <h2 className="about__cta-title">Ready to Experience the Difference?</h2>
             <p className="about__cta-text">
               Join thousands of chocolate lovers who have discovered the MELiZZO difference. Premium Dubai chocolate, delivered to your door.
