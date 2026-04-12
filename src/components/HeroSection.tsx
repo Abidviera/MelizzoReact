@@ -123,9 +123,9 @@ export default function HeroSection() {
       }
     };
 
-    el.addEventListener('mousemove', onMove, { passive: true });
+    el.addEventListener('mousemove', onMove as EventListener, { passive: true });
     return () => {
-      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mousemove', onMove as EventListener);
       if (mouseRafRef.current !== undefined) cancelAnimationFrame(mouseRafRef.current);
     };
   }, []);

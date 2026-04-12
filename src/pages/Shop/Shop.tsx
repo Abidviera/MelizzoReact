@@ -35,6 +35,8 @@ export default function Shop() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   // Read initial filter values from URL
   const activeCategory = searchParams.get('category') || '';
@@ -64,29 +66,72 @@ export default function Shop() {
     setSelectedMaxPrice(searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined);
   }, [searchParams]);
 
-  // Load categories and featured products
+  // Load initial data
   useEffect(() => {
-    setIsLoading(true);
-    const [cats, featured] = [ProductService.getCategories(), ProductService.getFeatured()];
-    setCategories(cats);
-    setFeaturedProducts(featured);
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+    async function loadInitialData() {
+      setIsLoading(true);
+      try {
+        const [cats, featured, all] = await Promise.all([
+          ProductService.getCategories(),
+          ProductService.getFeatured(6),
+          ProductService.getAll({}, 1, 100),
+        ]);
+        setCategories(cats);
+        setFeaturedProducts(featured);
+        setAllProducts(all.products);
+      } catch {
+        // Fallback to empty arrays
+        setCategories([]);
+        setFeaturedProducts([]);
+        setAllProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadInitialData();
   }, []);
 
-  // Build filters object
-  const filters: ProductFilters = useMemo(() => ({
-    category: selectedCategory || undefined,
-    sortBy: selectedSort,
-    inStock: inStockOnly ? true : undefined,
-    minPrice: selectedMinPrice,
-    maxPrice: selectedMaxPrice,
-    search: activeSearch || undefined,
-  }), [selectedCategory, selectedSort, inStockOnly, selectedMinPrice, selectedMaxPrice, activeSearch]);
+  // Apply filters whenever filter state changes
+  useEffect(() => {
+    async function applyFilters() {
+      const filters: ProductFilters = {
+        category: selectedCategory || undefined,
+        sortBy: selectedSort,
+        inStock: inStockOnly ? true : undefined,
+        minPrice: selectedMinPrice,
+        maxPrice: selectedMaxPrice,
+        search: activeSearch || undefined,
+      };
 
-  const filteredProducts = useMemo(() => {
-    return ProductService.filter(filters);
-  }, [filters]);
+      try {
+        const result = await ProductService.getAll(filters, 1, 100);
+        setFilteredProducts(result.products);
+      } catch {
+        // Client-side filter fallback
+        let results = [...allProducts];
+        if (selectedCategory) results = results.filter((p) => p.categorySlug === selectedCategory);
+        if (inStockOnly) results = results.filter((p) => p.inStock);
+        if (selectedMinPrice !== undefined) results = results.filter((p) => p.price >= selectedMinPrice!);
+        if (selectedMaxPrice !== undefined) results = results.filter((p) => p.price <= selectedMaxPrice!);
+        if (activeSearch) {
+          const q = activeSearch.toLowerCase();
+          results = results.filter(
+            (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
+          );
+        }
+        if (selectedSort) {
+          switch (selectedSort) {
+            case 'price-asc': results.sort((a, b) => a.price - b.price); break;
+            case 'price-desc': results.sort((a, b) => b.price - a.price); break;
+            case 'newest': results.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0)); break;
+            case 'rating': results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
+          }
+        }
+        setFilteredProducts(results);
+      }
+    }
+    applyFilters();
+  }, [selectedCategory, selectedSort, inStockOnly, selectedMinPrice, selectedMaxPrice, activeSearch, allProducts]);
 
   // Sync filters back to URL
   useEffect(() => {
@@ -120,16 +165,9 @@ export default function Shop() {
 
   const removeFilter = (key: string) => {
     switch (key) {
-      case 'category':
-        setSelectedCategory('');
-        break;
-      case 'price':
-        setSelectedMinPrice(undefined);
-        setSelectedMaxPrice(undefined);
-        break;
-      case 'inStock':
-        setInStockOnly(false);
-        break;
+      case 'category': setSelectedCategory(''); break;
+      case 'price': setSelectedMinPrice(undefined); setSelectedMaxPrice(undefined); break;
+      case 'inStock': setInStockOnly(false); break;
       case 'search':
         setSearchParams((prev) => {
           const next = new URLSearchParams(prev);
@@ -160,7 +198,6 @@ export default function Shop() {
 
   const Sidebar = () => (
     <aside className="shop__sidebar">
-      {/* Categories */}
       <section className="shop__filter-section">
         <h3 className="shop__filter-title">Category</h3>
         <ul className="shop__category-list">
@@ -170,7 +207,7 @@ export default function Shop() {
               onClick={() => setSelectedCategory('')}
             >
               <span className="shop__category-name">All Products</span>
-              <span className="shop__category-count">{ProductService.getAll().length}</span>
+              <span className="shop__category-count">{allProducts.length}</span>
             </button>
           </li>
           {categories.map((cat) => (
@@ -187,7 +224,6 @@ export default function Shop() {
         </ul>
       </section>
 
-      {/* Price Range */}
       <section className="shop__filter-section">
         <h3 className="shop__filter-title">Price Range</h3>
         <div className="shop__price-buttons">
@@ -203,7 +239,6 @@ export default function Shop() {
         </div>
       </section>
 
-      {/* Availability */}
       <section className="shop__filter-section">
         <h3 className="shop__filter-title">Availability</h3>
         <label className="shop__toggle">
@@ -219,7 +254,6 @@ export default function Shop() {
         </label>
       </section>
 
-      {/* Clear Filters */}
       {activeFilters.length > 0 && (
         <button className="shop__clear-filters" onClick={clearAllFilters}>
           Clear All Filters
@@ -265,7 +299,6 @@ export default function Shop() {
 
   return (
     <div className="shop">
-      {/* Hero Banner */}
       <section className="shop__hero">
         <div className="shop__hero-bg" />
         <div className="shop__hero-content">
@@ -277,7 +310,6 @@ export default function Shop() {
         </div>
       </section>
 
-      {/* Featured Products */}
       {!selectedCategory && !activeSearch && featuredProducts.length > 0 && (
         <section className="shop__featured">
           <div className="shop__section-header">
@@ -292,23 +324,18 @@ export default function Shop() {
         </section>
       )}
 
-      {/* Main Content */}
       <div className="shop__layout">
-        {/* Desktop Sidebar */}
         <div className="shop__desktop-sidebar">
           <Sidebar />
         </div>
 
-        {/* Products Area */}
         <div className="shop__main">
-          {/* Toolbar */}
           <div className="shop__toolbar">
             <div className="shop__toolbar-left">
               <p className="shop__results-count">
                 <span className="shop__results-number">{filteredProducts.length}</span>
                 {' '}product{filteredProducts.length !== 1 ? 's' : ''} found
               </p>
-              {/* Mobile filter button */}
               <button
                 className="shop__mobile-filter-btn"
                 onClick={() => setMobileFiltersOpen(true)}
@@ -338,7 +365,6 @@ export default function Shop() {
             </div>
           </div>
 
-          {/* Active Filter Chips */}
           {activeFilters.length > 0 && (
             <div className="shop__active-filters">
               {activeFilters.map((chip) => (
@@ -360,7 +386,6 @@ export default function Shop() {
             </div>
           )}
 
-          {/* Product Grid */}
           {isLoading ? (
             <div className="shop__grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -394,7 +419,6 @@ export default function Shop() {
         </div>
       </div>
 
-      {/* Mobile Filter Modal */}
       <MobileFilterModal />
     </div>
   );

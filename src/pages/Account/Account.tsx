@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { OrderService } from '../../services/orderService';
@@ -14,13 +14,24 @@ export default function Account() {
   const [activeTab, setActiveTab] = useState<Tab>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
+  const [registerForm, setRegisterForm] = useState({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
   const [showRegister, setShowRegister] = useState(false);
   const [profileForm, setProfileForm] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     phone: user?.phone || '',
   });
+
+  // Sync profile form when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [user]);
 
   if (!isAuthenticated && !isLoading) {
     return (
@@ -76,8 +87,16 @@ export default function Account() {
                   <label className="account__label">Password</label>
                   <input className="account__input" type="password" value={registerForm.password} onChange={(e) => setRegisterForm((f) => ({ ...f, password: e.target.value }))} placeholder="Min. 6 characters" />
                 </div>
+                <div className="account__field">
+                  <label className="account__label">Confirm Password</label>
+                  <input className="account__input" type="password" value={registerForm.confirmPassword} onChange={(e) => setRegisterForm((f) => ({ ...f, confirmPassword: e.target.value }))} placeholder="Re-enter your password" />
+                </div>
                 <button className="account__btn account__btn--primary" onClick={async () => {
-                  const result = await register(registerForm.email, registerForm.password, registerForm.firstName, registerForm.lastName);
+                  if (registerForm.password !== registerForm.confirmPassword) {
+                    notifyError('Passwords do not match');
+                    return;
+                  }
+                  const result = await register(registerForm.email, registerForm.password, registerForm.confirmPassword, registerForm.firstName, registerForm.lastName);
                   if (result.success) success('Account created!');
                   else notifyError(result.error || 'Registration failed');
                 }}>
@@ -95,9 +114,10 @@ export default function Account() {
     );
   }
 
-  const loadOrders = () => {
-    setOrders(OrderService.getAllOrders());
+  const loadOrders = async () => {
     setActiveTab('orders');
+    const { orders } = await OrderService.getOrders(1, 50);
+    setOrders(orders);
   };
 
   return (
@@ -136,7 +156,7 @@ export default function Account() {
             </button>
           </nav>
 
-          <button className="account__logout-btn" onClick={() => { logout(); success('Logged out successfully'); }}>
+          <button className="account__logout-btn" onClick={async () => { await logout(); success('Logged out successfully'); }}>
             Log Out
           </button>
         </aside>

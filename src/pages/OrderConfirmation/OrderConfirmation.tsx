@@ -11,11 +11,14 @@ export default function OrderConfirmation() {
   const [showCheck, setShowCheck] = useState(false);
 
   useEffect(() => {
-    if (orderNumber) {
-      const found = OrderService.getOrderByNumber(orderNumber);
-      setOrder(found || null);
+    async function load() {
+      if (orderNumber) {
+        const found = await OrderService.getOrderByNumber(orderNumber);
+        setOrder(found || null);
+      }
+      setTimeout(() => setShowCheck(true), 300);
     }
-    setTimeout(() => setShowCheck(true), 300);
+    load();
   }, [orderNumber]);
 
   if (!order) {

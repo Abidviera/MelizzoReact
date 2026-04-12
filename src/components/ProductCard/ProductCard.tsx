@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 import type { Product } from '../../types';
 import './ProductCard.css';
 
@@ -11,11 +13,29 @@ interface Props {
 export default function ProductCard({ product }: Props) {
   const { addToCart, addToWishlist, isInWishlist } = useCart();
   const { success } = useNotification();
+  const { isAuthenticated } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      openAuthModal(() => {
+        addToCart({
+          id: crypto.randomUUID(),
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          image: product.images[0]?.url || '',
+          maxQuantity: product.stockQuantity || 10,
+          description: product.shortDescription,
+        });
+        success(`${product.name} added to cart`);
+      });
+      return;
+    }
     addToCart({
       id: crypto.randomUUID(),
       productId: product.id,

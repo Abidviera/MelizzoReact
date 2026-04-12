@@ -2,17 +2,23 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useAuthModal } from '../../contexts/AuthModalContext';
 import { ProductService } from '../../services/productService';
 import { WhatsAppService } from '../../services/whatsAppService';
+import { ReviewService } from '../../services/reviewService';
 import type { Product } from '../../types';
+import type { Review } from '../../types';
+import type { RatingSummary } from '../../services/reviewService';
 import './ProductDetail.css';
 
-type TabKey = 'description' | 'ingredients' | 'shipping';
+type TabKey = 'description' | 'ingredients' | 'shipping' | 'reviews';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'description', label: 'Description' },
   { key: 'ingredients', label: 'Ingredients' },
   { key: 'shipping', label: 'Shipping' },
+  { key: 'reviews', label: 'Reviews' },
 ];
 
 export default function ProductDetail() {
@@ -20,6 +26,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart, addToWishlist, isInWishlist } = useCart();
   const { success } = useNotification();
+  const { isAuthenticated } = useAuth();
+  const { openAuthModal } = useAuthModal();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +37,20 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState<TabKey>('description');
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
+  // Reviews state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [ratingSummary, setRatingSummary] = useState<RatingSummary | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewFormRating, setReviewFormRating] = useState(0);
+  const [reviewFormHover, setReviewFormHover] = useState(0);
+  const [reviewFormTitle, setReviewFormTitle] = useState('');
+  const [reviewFormComment, setReviewFormComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
   const inWishlist = product ? isInWishlist(product.id) : false;
 
   useEffect(() => {
@@ -37,19 +59,52 @@ export default function ProductDetail() {
       return;
     }
 
-    const found = ProductService.getBySlug(slug);
-    setProduct(found || null);
-    setLoading(false);
-    setActiveImageIdx(0);
-    setQuantity(1);
-    setGiftWrap(false);
-    setActiveTab('description');
+    async function load() {
+      setLoading(true);
+      const found = await ProductService.getBySlug(slug!);
+      setProduct(found || null);
+      setActiveImageIdx(0);
+      setQuantity(1);
+      setGiftWrap(false);
+      setActiveTab('description');
+      setReviews([]);
+      setRatingSummary(null);
+      setReviewsPage(1);
 
-    if (found) {
-      const related = ProductService.getRelated(found.id, 4);
-      setRelatedProducts(related);
+      if (found) {
+        const related = await ProductService.getRelated(found.id, 4);
+        setRelatedProducts(related);
+      }
+      setLoading(false);
     }
+    load();
   }, [slug]);
+
+  // Fetch reviews when Reviews tab is active
+  useEffect(() => {
+    if (activeTab !== 'reviews') return;
+    const currentProduct = product;
+    if (!currentProduct) return;
+    const productId = currentProduct.id;
+
+    async function loadReviews() {
+      setReviewsLoading(true);
+      try {
+        const [reviewsRes, summaryRes] = await Promise.all([
+          ReviewService.getProductReviews(productId, reviewsPage, 5),
+          ReviewService.getRatingSummary(productId),
+        ]);
+        setReviews(reviewsRes.items);
+        setReviewsTotal(reviewsRes.totalCount);
+        setRatingSummary(summaryRes);
+      } catch {
+        // silently fail — reviews are non-critical
+      } finally {
+        setReviewsLoading(false);
+      }
+    }
+    loadReviews();
+  }, [activeTab, reviewsPage]);
 
   if (loading) {
     return (
@@ -137,6 +192,58 @@ export default function ProductDetail() {
       quantity,
     });
   };
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault();
+    if (!product) return;
+
+    if (!isAuthenticated) {
+      openAuthModal(() => handleSubmitReview(e));
+      return;
+    }
+
+    if (reviewFormRating === 0) {
+      setReviewError('Please select a star rating.');
+      return;
+    }
+    if (reviewFormComment.trim().length < 10) {
+      setReviewError('Review must be at least 10 characters.');
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewError(null);
+
+    try {
+      await ReviewService.createReview({
+        productId: product.id,
+        rating: reviewFormRating,
+        comment: reviewFormComment.trim(),
+        title: reviewFormTitle.trim() || undefined,
+      });
+      setReviewSuccess(true);
+      setReviewFormRating(0);
+      setReviewFormTitle('');
+      setReviewFormComment('');
+      // Refresh reviews
+      const [reviewsRes, summaryRes] = await Promise.all([
+        ReviewService.getProductReviews(product.id, 1, 5),
+        ReviewService.getRatingSummary(product.id),
+      ]);
+      setReviews(reviewsRes.items);
+      setReviewsTotal(reviewsRes.totalCount);
+      setRatingSummary(summaryRes);
+      setReviewsPage(1);
+      success('Review submitted! Thank you.');
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        || 'Failed to submit review. Please try again.';
+      setReviewError(msg);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
 
   const stockLabel = () => {
     if (!product.inStock) return 'Out of Stock';
@@ -436,12 +543,13 @@ export default function ProductDetail() {
             )}
             {activeTab === 'ingredients' && (
               <div className="pdp__tab-panel">
-                <p className="pdp__ingredients">
-                  Premium ingredients sourced from the finest producers. Each bar features
-                  high-quality cocoa and carefully selected natural flavorings.
-                  Contains: Cocoa mass, cocoa butter, sugar, pistachios, vanilla extract.
-                  May contain traces of nuts, milk, and soy.
-                </p>
+                {product.ingredients ? (
+                  <p className="pdp__ingredients">{product.ingredients}</p>
+                ) : (
+                  <p className="pdp__ingredients pdp__ingredients--empty">
+                    Ingredients information not available for this product.
+                  </p>
+                )}
               </div>
             )}
             {activeTab === 'shipping' && (
@@ -479,6 +587,203 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+            {activeTab === 'reviews' && (
+              <div className="pdp__tab-panel">
+                {/* Rating Summary */}
+                {ratingSummary && (
+                  <div className="pdp__reviews-summary">
+                    <div className="pdp__reviews-summary-score">
+                      <span className="pdp__reviews-avg">{ratingSummary.averageRating.toFixed(1)}</span>
+                      <div className="pdp__reviews-stars">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`pdp__reviews-star ${i < Math.round(ratingSummary.averageRating) ? 'pdp__reviews-star--filled' : ''}`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="pdp__reviews-total">{ratingSummary.totalReviews} reviews</span>
+                    </div>
+                    <div className="pdp__reviews-breakdown">
+                      {[
+                        { stars: 5, count: ratingSummary.fiveStar },
+                        { stars: 4, count: ratingSummary.fourStar },
+                        { stars: 3, count: ratingSummary.threeStar },
+                        { stars: 2, count: ratingSummary.twoStar },
+                        { stars: 1, count: ratingSummary.oneStar },
+                      ].map(({ stars, count }) => {
+                        const pct = ratingSummary.totalReviews > 0
+                          ? Math.round((count / ratingSummary.totalReviews) * 100)
+                          : 0;
+                        return (
+                          <div key={stars} className="pdp__reviews-bar-row">
+                            <span className="pdp__reviews-bar-label">{stars} ★</span>
+                            <div className="pdp__reviews-bar-track">
+                              <div className="pdp__reviews-bar-fill" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="pdp__reviews-bar-count">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Review Form */}
+                {isAuthenticated ? (
+                  <div className="pdp__review-form-card">
+                    <h3 className="pdp__review-form-title">Write a Review</h3>
+                    {reviewSuccess && (
+                      <div className="pdp__review-success">Thank you for your review!</div>
+                    )}
+                    <form className="pdp__review-form" onSubmit={handleSubmitReview}>
+                      <div className="pdp__review-field">
+                        <label className="pdp__review-label">Your Rating</label>
+                        <div className="pdp__review-stars-input">
+                          {Array.from({ length: 5 }).map((_, i) => {
+                            const val = i + 1;
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                className={`pdp__review-star-btn ${val <= (reviewFormHover || reviewFormRating) ? 'pdp__review-star-btn--filled' : ''}`}
+                                onMouseEnter={() => setReviewFormHover(val)}
+                                onMouseLeave={() => setReviewFormHover(0)}
+                                onClick={() => setReviewFormRating(val)}
+                                aria-label={`Rate ${val} stars`}
+                              >
+                                ★
+                              </button>
+                            );
+                          })}
+                          <span className="pdp__review-rating-label">
+                            {reviewFormRating > 0 ? ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewFormRating - 1] : ''}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="pdp__review-field">
+                        <label className="pdp__review-label" htmlFor="review-title">Review Title (optional)</label>
+                        <input
+                          id="review-title"
+                          type="text"
+                          className="pdp__review-input"
+                          value={reviewFormTitle}
+                          onChange={(e) => setReviewFormTitle(e.target.value)}
+                          placeholder="Summarize your experience"
+                          maxLength={300}
+                        />
+                      </div>
+                      <div className="pdp__review-field">
+                        <label className="pdp__review-label" htmlFor="review-comment">Your Review *</label>
+                        <textarea
+                          id="review-comment"
+                          className="pdp__review-textarea"
+                          value={reviewFormComment}
+                          onChange={(e) => setReviewFormComment(e.target.value)}
+                          placeholder="Share your thoughts about this chocolate..."
+                          rows={4}
+                          maxLength={2000}
+                          required
+                        />
+                        <span className="pdp__review-char-count">{reviewFormComment.length}/2000</span>
+                      </div>
+                      {reviewError && (
+                        <div className="pdp__review-error">{reviewError}</div>
+                      )}
+                      <button
+                        type="submit"
+                        className="pdp__review-submit"
+                        disabled={reviewSubmitting}
+                      >
+                        {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="pdp__review-login-prompt">
+                    <p>Please sign in to leave a review.</p>
+                    <button
+                      className="pdp__review-signin-btn"
+                      onClick={() => openAuthModal()}
+                    >
+                      Sign In / Create Account
+                    </button>
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                {reviewsLoading ? (
+                  <div className="pdp__reviews-loading">
+                    <div className="pdp__loading-spinner" />
+                  </div>
+                ) : reviews.length === 0 && ratingSummary !== null ? (
+                  <div className="pdp__reviews-empty">
+                    <p>No reviews yet. Be the first to share your experience!</p>
+                  </div>
+                ) : (
+                  <div className="pdp__reviews-list">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="pdp__review-item">
+                        <div className="pdp__review-header">
+                          <div className="pdp__review-meta">
+                            <span className="pdp__review-name">{review.userName}</span>
+                            {review.verified && (
+                              <span className="pdp__review-verified">Verified Purchase</span>
+                            )}
+                          </div>
+                          <div className="pdp__review-rating-row">
+                            <div className="pdp__review-stars-inline">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={`pdp__reviews-star ${i < review.rating ? 'pdp__reviews-star--filled' : ''}`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                            <span className="pdp__review-date">
+                              {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        {review.title && (
+                          <p className="pdp__review-title">{review.title}</p>
+                        )}
+                        <p className="pdp__review-body">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {reviewsTotal > 5 && (
+                  <div className="pdp__reviews-pagination">
+                    <button
+                      className="pdp__reviews-page-btn"
+                      onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
+                      disabled={reviewsPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="pdp__reviews-page-info">
+                      Page {reviewsPage} of {Math.ceil(reviewsTotal / 5)}
+                    </span>
+                    <button
+                      className="pdp__reviews-page-btn"
+                      onClick={() => setReviewsPage((p) => Math.min(Math.ceil(reviewsTotal / 5), p + 1))}
+                      disabled={reviewsPage >= Math.ceil(reviewsTotal / 5)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -9,7 +9,7 @@ export default function Wishlist() {
   const { success } = useNotification();
 
   const handleMoveToCart = (productId: string, variantId?: string) => {
-    const result = moveWishlistToCart(productId, variantId);
+    moveWishlistToCart(productId, variantId);
     success('Item moved to cart!');
   };
 

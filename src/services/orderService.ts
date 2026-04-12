@@ -1,145 +1,232 @@
 import type { Order, ShippingAddress, PaymentDetails, OrderItem } from '../types';
+import apiClient, { getErrorMessage } from './apiClient';
+import { CartService } from './cartService';
 
-const ORDERS_KEY = 'melizzo_orders';
-
-function loadOrders(): Order[] {
-  try {
-    const stored = localStorage.getItem(ORDERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+// ── Backend DTO types ──────────────────────────────────────────
+interface CreateOrderRequest {
+  userId: string;
+  items: {
+    productId: string;
+    name: string;
+    unitPrice: number;
+    quantity: number;
+    imageUrl: string;
+    variantName?: string;
+  }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    apartment?: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    country: string;
+  };
+  shippingMethod: string;
+  paymentMethod: string;
+  promoCode?: string;
 }
 
-function saveOrders(orders: Order[]) {
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+interface OrderDto {
+  id: string;
+  orderNumber: string;
+  items: {
+    id: string;
+    productId: string;
+    name: string;
+    unitPrice: number;
+    quantity: number;
+    imageUrl: string;
+    variant?: string;
+  }[];
+  shipping: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    apartment?: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    country: string;
+  };
+  subtotal: number;
+  tax: number;
+  shippingCost: number;
+  discount: number;
+  total: number;
+  status: string;
+  shippingMethod: string;
+  createdAt: string;
+  estimatedDelivery?: string;
+  trackingNumber?: string;
 }
 
-function generateOrderNumber(): string {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `MEL-${timestamp}-${random}`;
+interface OrderListDto {
+  id: string;
+  orderNumber: string;
+  itemCount: number;
+  total: number;
+  status: string;
+  createdAt: string;
 }
 
-function calculateEstimatedDelivery(method: string): string {
-  const today = new Date();
-  let days = 7;
-  if (method === 'express') days = 3;
-  else if (method === 'overnight') days = 1;
-  today.setDate(today.getDate() + days);
-  return today.toLocaleDateString('en-CA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+// ── Mapping ────────────────────────────────────────────────────
+function mapOrder(dto: OrderDto): Order {
+  return {
+    id: dto.id,
+    orderNumber: dto.orderNumber,
+    items: dto.items.map((i) => ({
+      id: i.id,
+      productId: i.productId,
+      name: i.name,
+      price: i.unitPrice,
+      quantity: i.quantity,
+      image: i.imageUrl,
+      variant: i.variant,
+    })),
+    shipping: {
+      firstName: dto.shipping.firstName,
+      lastName: dto.shipping.lastName,
+      email: dto.shipping.email,
+      phone: dto.shipping.phone,
+      address: dto.shipping.address,
+      apartment: dto.shipping.apartment,
+      city: dto.shipping.city,
+      province: dto.shipping.province,
+      postalCode: dto.shipping.postalCode,
+      country: dto.shipping.country,
+    },
+    payment: { last4: undefined },
+    subtotal: dto.subtotal,
+    tax: dto.tax,
+    shippingCost: dto.shippingCost,
+    discount: dto.discount,
+    total: dto.total,
+    status: dto.status.toLowerCase() as Order['status'],
+    shippingMethod: dto.shippingMethod,
+    createdAt: dto.createdAt,
+    estimatedDelivery: dto.estimatedDelivery,
+    trackingNumber: dto.trackingNumber,
+  };
 }
 
-function maskPayment(payment: PaymentDetails): PaymentDetails {
-  if (payment.cardNumber && payment.cardNumber.length >= 4) {
-    return {
-      ...payment,
-      cardNumber: undefined,
-      cvv: undefined,
-      last4: payment.cardNumber.replace(/\s/g, '').slice(-4),
-    };
-  }
-  return payment;
-}
-
+// ── Order Service ─────────────────────────────────────────────
 export const OrderService = {
-  createOrder(
+  async createOrder(
     items: OrderItem[],
     shipping: ShippingAddress,
-    payment: PaymentDetails,
-    subtotal: number,
-    tax: number,
-    shippingCost: number,
-    discount: number,
-    total: number,
-    shippingMethod: string
-  ): Order {
-    const orders = loadOrders();
-    const order: Order = {
-      id: crypto.randomUUID(),
-      orderNumber: generateOrderNumber(),
-      items,
-      shipping,
-      payment: maskPayment(payment),
-      subtotal,
-      tax,
-      shippingCost,
-      discount,
-      total,
-      status: 'pending',
-      shippingMethod,
-      createdAt: new Date().toISOString(),
-      estimatedDelivery: calculateEstimatedDelivery(shippingMethod.toLowerCase()),
-    };
-    orders.unshift(order);
-    saveOrders(orders);
-    return order;
-  },
+    _payment: PaymentDetails,
+    _subtotal: number,
+    _tax: number,
+    _shippingCost: number,
+    _discount: number,
+    _total: number,
+    shippingMethod: string,
+    promoCode?: string,
+  ): Promise<{ success: boolean; order?: Order; error?: string }> {
+    try {
+      const request: CreateOrderRequest = {
+        userId: '', // Backend gets userId from auth token
+        items: items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          unitPrice: i.price,
+          quantity: i.quantity,
+          imageUrl: i.image,
+          variantName: i.variant,
+        })),
+        shippingAddress: {
+          firstName: shipping.firstName,
+          lastName: shipping.lastName,
+          email: shipping.email,
+          phone: shipping.phone,
+          address: shipping.address,
+          apartment: shipping.apartment,
+          city: shipping.city,
+          province: shipping.province,
+          postalCode: shipping.postalCode,
+          country: shipping.country,
+        },
+        shippingMethod: shippingMethod.toLowerCase(),
+        paymentMethod: 'card',
+        promoCode,
+      };
 
-  getOrderById(id: string): Order | undefined {
-    return loadOrders().find((o) => o.id === id);
-  },
+      const response = await apiClient.post<OrderDto>('/orders', request);
+      const order = mapOrder(response.data);
 
-  getOrderByNumber(orderNumber: string): Order | undefined {
-    return loadOrders().find((o) => o.orderNumber === orderNumber);
-  },
+      // Clear cart after successful order
+      CartService.clearCart();
 
-  getAllOrders(): Order[] {
-    return loadOrders();
-  },
-
-  getRecentOrders(limit = 5): Order[] {
-    return loadOrders().slice(0, limit);
-  },
-
-  getOrderCount(): number {
-    return loadOrders().length;
-  },
-
-  getTotalOrderValue(): number {
-    return loadOrders().reduce((sum, o) => sum + o.total, 0);
-  },
-
-  getOrdersByStatus(status: Order['status']): Order[] {
-    return loadOrders().filter((o) => o.status === status);
-  },
-
-  updateOrderStatus(id: string, status: Order['status']): Order | undefined {
-    const orders = loadOrders();
-    const order = orders.find((o) => o.id === id);
-    if (order) {
-      order.status = status;
-      saveOrders(orders);
+      return { success: true, order };
+    } catch (err) {
+      return { success: false, error: getErrorMessage(err) };
     }
-    return order;
   },
 
-  addTrackingNumber(id: string, tracking: string): Order | undefined {
-    const orders = loadOrders();
-    const order = orders.find((o) => o.id === id);
-    if (order) {
-      order.trackingNumber = tracking;
-      order.status = 'shipped';
-      saveOrders(orders);
+  async getOrderById(id: string): Promise<Order | null> {
+    try {
+      const response = await apiClient.get<OrderDto>(`/orders/${id}`);
+      return mapOrder(response.data);
+    } catch {
+      return null;
     }
-    return order;
   },
 
-  cancelOrder(id: string): Order | undefined {
-    const orders = loadOrders();
-    const order = orders.find((o) => o.id === id);
-    if (order && (order.status === 'pending' || order.status === 'processing')) {
-      order.status = 'cancelled';
-      saveOrders(orders);
+  async getOrderByNumber(orderNumber: string): Promise<Order | null> {
+    try {
+      const response = await apiClient.get<OrderDto>(`/orders/number/${orderNumber}`);
+      return mapOrder(response.data);
+    } catch {
+      return null;
     }
-    return order;
   },
 
-  calculateEstimatedDelivery,
-  generateOrderNumber,
+  async getOrders(page = 1, pageSize = 10): Promise<{ orders: Order[]; total: number }> {
+    try {
+      const response = await apiClient.get<{ items: OrderListDto[]; totalCount: number }>('/orders', {
+        params: { page, pageSize },
+      });
+
+      // For order details, we need to fetch each order
+      const orders: Order[] = [];
+      for (const dto of response.data.items) {
+        const full = await this.getOrderById(dto.id);
+        if (full) orders.push(full);
+      }
+
+      return { orders, total: response.data.totalCount };
+    } catch {
+      return { orders: [], total: 0 };
+    }
+  },
+
+  async cancelOrder(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await apiClient.delete(`/orders/${id}`);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: getErrorMessage(err) };
+    }
+  },
+
+  // ── Local fallback helpers ───────────────────────────────────
+  calculateEstimatedDelivery(method: string): string {
+    const today = new Date();
+    let days = 7;
+    if (method === 'express') days = 3;
+    else if (method === 'overnight') days = 1;
+    today.setDate(today.getDate() + days);
+    return today.toLocaleDateString('en-CA', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  },
 };

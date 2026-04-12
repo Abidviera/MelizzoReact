@@ -1,5 +1,3 @@
-import type { PaymentDetails } from '../types';
-
 interface PaymentRequest {
   amount: number;
   currency?: string;

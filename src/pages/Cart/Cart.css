@@ -647,6 +647,45 @@
   letter-spacing: 0.3px;
 }
 
+/* Available Promo Codes */
+.cart__promo-available {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cart__promo-available-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  color: rgba(250, 254, 249, 0.4);
+  letter-spacing: 0.3px;
+}
+
+.cart__promo-available-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cart__promo-chip {
+  background: rgba(58, 110, 95, 0.1);
+  border: 1px solid rgba(58, 110, 95, 0.3);
+  color: #3A6E5F;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cart__promo-chip:hover {
+  background: rgba(58, 110, 95, 0.2);
+  border-color: rgba(58, 110, 95, 0.5);
+}
+
 /* Promo Applied */
 .cart__promo-applied {
   display: flex;

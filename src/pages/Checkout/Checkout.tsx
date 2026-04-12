@@ -88,7 +88,7 @@ export default function Checkout() {
       });
 
       if (paymentResult.success) {
-        const order = OrderService.createOrder(
+        const orderResult = await OrderService.createOrder(
           cart.items.map((item) => ({
             id: item.id,
             productId: item.productId,
@@ -112,11 +112,19 @@ export default function Checkout() {
           shippingMethod.price,
           cart.discount,
           cart.subtotal + cart.tax + shippingMethod.price - cart.discount,
-          shippingMethod.name
+          shippingMethod.name,
+          cart.promoCode,
         );
+
+        if (!orderResult.success) {
+          notifyError(orderResult.error || 'Failed to create order');
+          setIsProcessing(false);
+          return;
+        }
+
         clearCart();
         success('Order placed successfully!');
-        navigate(`/order-confirmation/${order.orderNumber}`);
+        navigate(`/order-confirmation/${orderResult.order!.orderNumber}`);
       } else {
         notifyError(paymentResult.message);
       }

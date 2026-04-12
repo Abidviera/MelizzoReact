@@ -6,7 +6,7 @@ import './Navbar.css';
 
 export default function Navbar() {
   const { itemCount, wishlistCount } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -49,6 +49,9 @@ export default function Navbar() {
             <Link to="/about" className="navbar__nav-link">Our Story</Link>
             <Link to="/coming-soon" className="navbar__nav-link">Coming Soon</Link>
             <Link to="/contact" className="navbar__nav-link">Contact</Link>
+            {isAdmin && (
+              <Link to="/admin" className="navbar__nav-link" style={{ color: '#3A6E5F' }}>Admin</Link>
+            )}
           </nav>
 
           <div className="navbar__actions">
@@ -110,6 +113,9 @@ export default function Navbar() {
             <Link to="/account" className="navbar__mobile-link">
               {isAuthenticated ? `Hi, ${user?.firstName}` : 'Account'}
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="navbar__mobile-link" style={{ color: '#3A6E5F' }}>Admin Dashboard</Link>
+            )}
           </nav>
 
           <div className="navbar__mobile-contact">

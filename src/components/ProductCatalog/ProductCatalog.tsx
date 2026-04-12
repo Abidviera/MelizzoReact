@@ -1,12 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductService } from '../../services/productService';
 import { WhatsAppService } from '../../services/whatsAppService';
+import type { Product } from '../../types';
 import './ProductCatalog.css';
 
 export default function ProductCatalog() {
   const sectionRef = useRef<HTMLElement>(null);
-  const products = ProductService.getAll().filter((p) => p.inStock);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const result = await ProductService.getAll({ inStock: true }, 1, 20);
+      setProducts(result.products);
+    }
+    load();
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -37,14 +46,12 @@ export default function ProductCatalog() {
 
   return (
     <section ref={sectionRef} className="pc">
-      {/* Background */}
       <div className="pc__bg">
         <div className="pc__bg-gradient" />
         <div className="pc__bg-grid" />
       </div>
 
       <div className="pc__inner">
-        {/* Header */}
         <div className="pc__header">
           <div className="pc__label">
             <div className="pc__label-line" />
@@ -57,7 +64,6 @@ export default function ProductCatalog() {
           </p>
         </div>
 
-        {/* Product Grid */}
         <div className="pc__grid">
           {products.map((product, i) => (
             <div
@@ -117,7 +123,6 @@ export default function ProductCatalog() {
           ))}
         </div>
 
-        {/* View All CTA */}
         <div className="pc__cta">
           <Link to="/shop" className="pc__view-all">
             <span>View All Products</span>

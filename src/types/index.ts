@@ -145,6 +145,7 @@ export interface User {
   lastName: string;
   phone?: string;
   createdAt?: string;
+  role: 'admin' | 'customer';
 }
 
 export interface AuthState {

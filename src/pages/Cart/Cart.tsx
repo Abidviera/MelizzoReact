@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { WhatsAppService } from '../../services/whatsAppService';
+import { CartService } from '../../services/cartService';
+import type { PromoCode } from '../../types';
 import './Cart.css';
 
 const FREE_SHIPPING_THRESHOLD = 100;
@@ -83,14 +85,18 @@ function TrustBadges() {
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, applyPromoCode, removePromoCode } = useCart();
-  const { success, error: notifyError } = useNotification();
+  const { success } = useNotification();
 
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoRemoving, setPromoRemoving] = useState(false);
+  const [availablePromoCodes, setAvailablePromoCodes] = useState<PromoCode[]>([]);
   const promoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const removeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setAvailablePromoCodes(CartService.getAvailablePromoCodes());
+  }, []);
 
   const isEmpty = cart.items.length === 0;
   const shippingProgress = Math.min((cart.subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
@@ -114,8 +120,8 @@ export default function Cart() {
     setPromoError('');
 
     // Simulate slight async delay for UX
-    setTimeout(() => {
-      const result = applyPromoCode(promoInput.trim());
+    setTimeout(async () => {
+      const result = await applyPromoCode(promoInput.trim());
       setPromoLoading(false);
 
       if (result.success) {
@@ -372,6 +378,27 @@ export default function Cart() {
                     </div>
                     {promoError && (
                       <p className="cart__promo-error" role="alert">{promoError}</p>
+                    )}
+                    {availablePromoCodes.length > 0 && (
+                      <div className="cart__promo-available">
+                        <span className="cart__promo-available-label">Available codes:</span>
+                        <div className="cart__promo-available-list">
+                          {availablePromoCodes.map((pc) => (
+                            <button
+                              key={pc.code}
+                              type="button"
+                              className="cart__promo-chip"
+                              onClick={() => {
+                                setPromoInput(pc.code);
+                                setPromoError('');
+                              }}
+                              title={pc.description}
+                            >
+                              {pc.code}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
